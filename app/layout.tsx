@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
+  metadataBase: new URL("https://fairbills.vercel.app"),
   title: "FairBills — Stop paying the loyalty tax on power",
   description:
     "Free Australian tool that checks your electricity bill against every plan from all 77 retailers, then hands you the script to switch or get a better rate.",

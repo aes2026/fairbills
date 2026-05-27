@@ -17,6 +17,7 @@ const TARIFF_LABELS: Record<TariffType, string> = {
   flat: "Flat (single rate)",
   time_of_use: "Time of use",
   controlled_load: "Controlled load",
+  complex_multi_tariff: "Complex (multiple rates)",
 };
 
 function centsToDollars(cents: number | null): string {

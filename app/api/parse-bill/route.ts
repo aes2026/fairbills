@@ -21,25 +21,34 @@ type ImageMediaType = (typeof IMAGE_MEDIA_TYPES)[number];
 
 const INSTRUCTIONS = `You are a precise parser for Australian residential electricity bills. Read the attached bill (PDF or photo) and extract the fields listed below.
 
-Return ONLY a single JSON object — no prose, no explanation, no markdown, no code fences. If a field is not present on the bill, use null (the one exception is tariff_type, which must always be one of the allowed values; use "flat" if unclear).
+Return ONLY a single JSON object — no prose, no explanation, no markdown, no code fences. If a field is not present on the bill, use null (the one exception is tariff_type, which must always be one of the allowed values; use "flat" if unclear). For the boolean *_present fields, use false (not null) when the feature is absent.
 
 All monetary values must be in CENTS:
 - total_amount_cents: total amount payable on THIS bill, in cents (e.g. $284.50 -> 28450).
 - supply_charge_per_day_cents: daily supply charge in cents (e.g. $1.15/day -> 115, 110.4c/day -> 110.4). Keep decimals.
 - usage_rate_cents_flat / _peak / _shoulder / _offpeak: usage rates in cents per kWh (e.g. 28.4c/kWh -> 28.4, $0.284/kWh -> 28.4). Keep decimals.
 
-Other fields:
+Core fields:
 - kwh_used: total electricity used over the billing period, in kWh (a number).
 - billing_period_start / billing_period_end: ISO dates formatted "YYYY-MM-DD".
 - postcode: the 4-digit postcode of the supply address, as a string.
 - distributor: the electricity network/distributor if shown. For NSW this is one of "Ausgrid", "Endeavour", or "Essential Energy". Otherwise null.
 - account_number: the customer's account or reference number exactly as printed (may contain digits and letters). Null if not visible.
-- tariff_type: "flat" for a single usage rate; "time_of_use" if there are peak/shoulder/off-peak rates; "controlled_load" if a separate controlled-load circuit is the primary tariff.
+- customer_name / service_address: as printed, or null.
+
+Structural-value features (these often make a plan worth KEEPING — detect them carefully):
+- EV tariff: look for line items containing "EV", "Electric Vehicle", "vehicle charging", or any usage rate below 15c/kWh outside the standard overnight window. Set ev_tariff_present true and fill ev_tariff_kwh, ev_tariff_rate_cents, ev_tariff_window_description.
+- Super off-peak / solar soak: a line item at $0.00 or below 5c/kWh, typically a midday window (e.g. 10am-3pm). Also called "solar soak", "super off peak", "free power", "demand response". Set super_off_peak_present and fill super_off_peak_kwh, super_off_peak_rate_cents, super_off_peak_window_description.
+- Controlled load: a separate controlled-load/off-peak circuit (e.g. hot water). Set controlled_load_present and fill controlled_load_kwh, controlled_load_rate_cents.
+- Solar export / feed-in: credits labelled "Solar FiT", "Feed-in tariff", "Solar export". Set solar_export_present and fill solar_export_kwh, solar_fit_cents_per_kwh.
+
+Tariff classification:
+- tariff_type: "flat" for a single usage rate; "time_of_use" for peak/shoulder/off-peak rates; "controlled_load" if a controlled-load circuit is the primary tariff; "complex_multi_tariff" if the bill has MORE THAN THREE distinct rate categories.
 
 For a flat tariff, put the single rate in usage_rate_cents_flat and leave peak/shoulder/offpeak null. For time-of-use, fill peak/shoulder/offpeak (any not shown -> null) and leave flat null.
 
 The JSON object must have exactly these keys:
-{"retailer_name","plan_name","account_number","billing_period_start","billing_period_end","total_amount_cents","kwh_used","supply_charge_per_day_cents","usage_rate_cents_flat","usage_rate_cents_peak","usage_rate_cents_shoulder","usage_rate_cents_offpeak","postcode","distributor","tariff_type"}`;
+{"retailer_name","plan_name","account_number","customer_name","service_address","billing_period_start","billing_period_end","total_amount_cents","kwh_used","supply_charge_per_day_cents","usage_rate_cents_flat","usage_rate_cents_peak","usage_rate_cents_shoulder","usage_rate_cents_offpeak","ev_tariff_present","ev_tariff_kwh","ev_tariff_rate_cents","ev_tariff_window_description","super_off_peak_present","super_off_peak_kwh","super_off_peak_rate_cents","super_off_peak_window_description","controlled_load_present","controlled_load_kwh","controlled_load_rate_cents","solar_export_present","solar_export_kwh","solar_fit_cents_per_kwh","postcode","distributor","tariff_type"}`;
 
 const LPG_INSTRUCTIONS = `You are a precise parser for Australian bottled LPG gas bills and delivery receipts. These vary widely — printed invoices, handwritten dockets, or photos of either. Read the attached file and extract the fields listed below.
 

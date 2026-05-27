@@ -5,7 +5,7 @@ import { createServiceClient } from "@/lib/supabase/server";
 export const runtime = "nodejs";
 
 const PLAN_COLUMNS =
-  "id,plan_id,retailer_name,plan_name,distributor,tariff_type,supply_charge_per_day_cents,usage_rate_cents_flat,usage_rate_cents_peak,usage_rate_cents_shoulder,usage_rate_cents_offpeak,features";
+  "id,plan_id,retailer_name,plan_name,distributor,tariff_type,supply_charge_per_day_cents,usage_rate_cents_flat,usage_rate_cents_peak,usage_rate_cents_shoulder,usage_rate_cents_offpeak,features,has_ev_tariff,has_super_off_peak,solar_fit_cents_per_kwh";
 
 const PAGE = 1000; // Supabase caps a single response at 1000 rows
 const MAX_PAGES = 8; // safety bound (~8000 plans)
@@ -58,6 +58,13 @@ export async function POST(req: Request) {
 
   const supabase = createServiceClient();
 
+  // A "complex_multi_tariff" bill has no equivalent candidate tariff in the AER
+  // data, so we price it against flat plans. The confidence engine then flags
+  // that the structural features (EV tariff, free midday) don't transfer —
+  // which is exactly how a complex bill earns honest "stay" advice.
+  const candidateTariff =
+    bill.tariff_type === "complex_multi_tariff" ? "flat" : bill.tariff_type;
+
   // Prefer postcode matching — it pins the exact distributor zone (Ausgrid /
   // Endeavour / the three Essential Energy zones) without relying on the bill's
   // distributor wording.
@@ -70,7 +77,7 @@ export async function POST(req: Request) {
           .select(PLAN_COLUMNS)
           .eq("state", "NSW")
           .eq("is_market_offer", true)
-          .eq("tariff_type", bill.tariff_type)
+          .eq("tariff_type", candidateTariff)
           .contains("included_postcodes", [bill.postcode!]),
       );
     }
@@ -84,7 +91,7 @@ export async function POST(req: Request) {
           .select(PLAN_COLUMNS)
           .eq("state", "NSW")
           .eq("is_market_offer", true)
-          .eq("tariff_type", bill.tariff_type)
+          .eq("tariff_type", candidateTariff)
           .ilike("distributor", `${prefix}%`),
       );
     }

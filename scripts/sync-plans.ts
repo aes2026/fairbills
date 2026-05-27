@@ -50,6 +50,11 @@ interface MappedPlan {
   usage_rate_cents_offpeak: number | null;
   controlled_load_cents: number | null;
   solar_fit_cents: number | null;
+  solar_fit_cents_per_kwh: number | null;
+  has_ev_tariff: boolean;
+  ev_tariff_rate_cents: number | null;
+  has_super_off_peak: boolean;
+  super_off_peak_rate_cents: number | null;
   included_postcodes: string[] | null;
   features: Record<string, unknown>;
   effective_from: string;
@@ -124,6 +129,7 @@ interface RateBlock {
   type?: string; // PEAK | OFF_PEAK | SHOULDER
   timeOfUseType?: string; // legacy/alt key, kept as a fallback
   rates?: { unitPrice?: string }[];
+  timeOfUse?: { days?: string[]; startTime?: string; endTime?: string }[];
 }
 interface TariffPeriod {
   rateBlockUType?: string;
@@ -217,11 +223,76 @@ function tariffTypeFrom(ec: ElectricityContract | undefined): TariffType {
   return "flat"; // SINGLE_RATE / SINGLE_RATE_CONT_LOAD
 }
 
+/** Hour (0-23) from an AER "HHMM" time string, or null. */
+function hourOf(t: string | undefined): number | null {
+  if (!t) return null;
+  const h = parseInt(t.slice(0, 2), 10);
+  return Number.isFinite(h) ? h : null;
+}
+
+/**
+ * Conservatively detect structural-value features on a candidate plan.
+ * Deliberately under-detects: a false negative just makes a comparison
+ * low-confidence (honest "stay"), whereas a false positive could wrongly
+ * recommend switching off a plan that actually loses the feature.
+ *  - EV tariff: a sub-15c/kWh rate confined to an overnight window (starts
+ *    00:00, ends by ~06:00).
+ *  - Super off-peak / solar soak: a sub-5c/kWh rate in a midday window (10-15h).
+ */
+function detectPlanFeatures(ec: ElectricityContract | undefined): {
+  has_ev_tariff: boolean;
+  ev_tariff_rate_cents: number | null;
+  has_super_off_peak: boolean;
+  super_off_peak_rate_cents: number | null;
+} {
+  let hasEv = false;
+  let evRate: number | null = null;
+  let hasSuper = false;
+  let superRate: number | null = null;
+
+  for (const tp of ec?.tariffPeriod ?? []) {
+    for (const tour of tp.timeOfUseRates ?? []) {
+      const price = Number(tour.rates?.[0]?.unitPrice); // dollars/kWh
+      if (!Number.isFinite(price)) continue;
+      const windows = tour.timeOfUse ?? [];
+
+      if (price < 0.15) {
+        const overnight = windows.some((w) => {
+          const s = hourOf(w.startTime);
+          const e = hourOf(w.endTime);
+          return s === 0 && e != null && e <= 6;
+        });
+        if (overnight) {
+          hasEv = true;
+          evRate = Math.round(price * 100);
+        }
+      }
+      if (price < 0.05) {
+        const midday = windows.some((w) => {
+          const s = hourOf(w.startTime);
+          return s != null && s >= 10 && s <= 15;
+        });
+        if (midday) {
+          hasSuper = true;
+          superRate = Math.round(price * 100);
+        }
+      }
+    }
+  }
+  return {
+    has_ev_tariff: hasEv,
+    ev_tariff_rate_cents: evRate,
+    has_super_off_peak: hasSuper,
+    super_off_peak_rate_cents: superRate,
+  };
+}
+
 function mapPlan(detail: PlanDetail): MappedPlan[] {
   const d = detail.data;
   const ec = d.electricityContract;
   const tp = ec?.tariffPeriod?.[0];
   const tariff_type = tariffTypeFrom(ec);
+  const featureFlags = detectPlanFeatures(ec);
 
   let flat: number | null = null;
   let peak: number | null = null;
@@ -289,6 +360,11 @@ function mapPlan(detail: PlanDetail): MappedPlan[] {
     usage_rate_cents_offpeak: offpeak,
     controlled_load_cents: controlled,
     solar_fit_cents: solar,
+    solar_fit_cents_per_kwh: solar != null ? Math.round(solar) : null,
+    has_ev_tariff: featureFlags.has_ev_tariff,
+    ev_tariff_rate_cents: featureFlags.ev_tariff_rate_cents,
+    has_super_off_peak: featureFlags.has_super_off_peak,
+    super_off_peak_rate_cents: featureFlags.super_off_peak_rate_cents,
     included_postcodes: d.geography?.includedPostcodes ?? null,
     features,
     effective_from: effectiveFrom,
