@@ -12,6 +12,7 @@ export type TariffType = (typeof TARIFF_TYPES)[number];
 export const BillSchema = z.object({
   retailer_name: z.string().nullable(),
   plan_name: z.string().nullable(),
+  account_number: z.string().nullish(),
   billing_period_start: z.string().nullable(),
   billing_period_end: z.string().nullable(),
   total_amount_cents: z.number().nullable(),

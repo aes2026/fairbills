@@ -185,6 +185,15 @@ export default function ConfirmPage() {
               onChange={(e) => set("postcode", e.target.value || null)}
             />
           </div>
+          <div>
+            <label className={labelCls}>Account number</label>
+            <input
+              className={inputCls}
+              value={bill.account_number ?? ""}
+              onChange={(e) => set("account_number", e.target.value || null)}
+              placeholder="Used in your script"
+            />
+          </div>
 
           {bill.tariff_type === "time_of_use" ? (
             <>

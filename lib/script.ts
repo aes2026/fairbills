@@ -9,6 +9,7 @@ import contactsData from "@/data/retailer-contacts.json";
 interface ScriptInput {
   currentRetailer: string | null;
   currentPlan: string | null;
+  accountNumber?: string | null;
   postcode: string | null;
   topPickRetailer: string;
   topPickPlan: string;
@@ -50,12 +51,13 @@ export function lookupRetailerContact(retailer: string | null): RetailerContact 
 /** Option A — ask the current retailer to match the cheaper rate. */
 export function buildMatchScript(input: ScriptInput): string {
   const plan = input.currentPlan ?? "my current plan";
+  const account = input.accountNumber?.trim() || "[your account number]";
   const savingClause =
     input.savingCents > 0
       ? ` — that's about ${dollars(input.savingCents)} a year cheaper than what I'm paying you`
       : "";
   return [
-    `Hi, I've been a customer for a while on ${plan}, account [your account number].`,
+    `Hi, I've been a customer for a while on ${plan}, account ${account}.`,
     "",
     `I've just compared my rates and I can move to ${input.topPickRetailer}'s ${input.topPickPlan} at ${input.rateLabel} and ${supplyPerDay(input.supplyCents)}${savingClause}.`,
     "",

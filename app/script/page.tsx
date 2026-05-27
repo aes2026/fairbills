@@ -103,6 +103,7 @@ export default function ScriptPage() {
   const scriptInput = {
     currentRetailer: bill.retailer_name,
     currentPlan: bill.plan_name,
+    accountNumber: bill.account_number,
     postcode: bill.postcode,
     topPickRetailer: topPick.retailer,
     topPickPlan: topPick.plan,

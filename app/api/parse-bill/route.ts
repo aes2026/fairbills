@@ -32,12 +32,13 @@ Other fields:
 - billing_period_start / billing_period_end: ISO dates formatted "YYYY-MM-DD".
 - postcode: the 4-digit postcode of the supply address, as a string.
 - distributor: the electricity network/distributor if shown. For NSW this is one of "Ausgrid", "Endeavour", or "Essential Energy". Otherwise null.
+- account_number: the customer's account or reference number exactly as printed (may contain digits and letters). Null if not visible.
 - tariff_type: "flat" for a single usage rate; "time_of_use" if there are peak/shoulder/off-peak rates; "controlled_load" if a separate controlled-load circuit is the primary tariff.
 
 For a flat tariff, put the single rate in usage_rate_cents_flat and leave peak/shoulder/offpeak null. For time-of-use, fill peak/shoulder/offpeak (any not shown -> null) and leave flat null.
 
 The JSON object must have exactly these keys:
-{"retailer_name","plan_name","billing_period_start","billing_period_end","total_amount_cents","kwh_used","supply_charge_per_day_cents","usage_rate_cents_flat","usage_rate_cents_peak","usage_rate_cents_shoulder","usage_rate_cents_offpeak","postcode","distributor","tariff_type"}`;
+{"retailer_name","plan_name","account_number","billing_period_start","billing_period_end","total_amount_cents","kwh_used","supply_charge_per_day_cents","usage_rate_cents_flat","usage_rate_cents_peak","usage_rate_cents_shoulder","usage_rate_cents_offpeak","postcode","distributor","tariff_type"}`;
 
 function json(body: unknown, status = 200) {
   return Response.json(body, { status });
