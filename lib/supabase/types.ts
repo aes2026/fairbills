@@ -125,6 +125,30 @@ export type Database = {
         };
         Relationships: [];
       };
+      notify_signups: {
+        Row: {
+          email: string;
+          id: string;
+          notified_at: string | null;
+          signed_up_at: string;
+          utility: string;
+        };
+        Insert: {
+          email: string;
+          id?: string;
+          notified_at?: string | null;
+          signed_up_at?: string;
+          utility: string;
+        };
+        Update: {
+          email?: string;
+          id?: string;
+          notified_at?: string | null;
+          signed_up_at?: string;
+          utility?: string;
+        };
+        Relationships: [];
+      };
       lpg_prices: {
         Row: {
           bottle_size_kg: number;

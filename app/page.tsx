@@ -6,16 +6,20 @@ import {
   Code,
   Database,
   FileUp,
+  Flame,
   HandCoins,
   Lock,
   MessageSquare,
   Search,
   ShieldCheck,
+  ThermometerSun,
   Upload,
+  Wifi,
   Zap,
 } from "lucide-react";
 
 import { Button } from "@/components/ui/button";
+import { NotifyMeButton } from "@/components/notify-me-button";
 import { getLiveStats } from "@/lib/stats";
 
 export const revalidate = 60;
@@ -159,12 +163,74 @@ export default async function Home() {
             </span>
           ))}
         </div>
+      </section>
 
-        <p className="mt-6 text-[13px] text-text-secondary">
-          Checking your gas instead?{" "}
-          <Link href="/check" className="font-medium text-brand-600 hover:text-brand-700">
-            Check gas →
-          </Link>
+      {/* More ways FairBills helps */}
+      <section className="px-6 pb-12">
+        <div className="mb-7 border-t border-black/10 pt-10">
+          <h2 className="text-[22px] font-medium tracking-[-0.3px]">
+            Got more than just power? We check those too.
+          </h2>
+        </div>
+
+        <div className="grid grid-cols-1 gap-3.5 md:grid-cols-3">
+          {/* Bottled gas — live */}
+          <div className="group flex flex-col rounded-[12px] border-[0.5px] border-black/15 bg-surface p-[18px] transition-all hover:border-brand-500 hover:shadow-md md:p-6">
+            <span className="mb-3.5 flex size-11 items-center justify-center rounded-[10px] bg-warning-50">
+              <Flame className="size-[22px] text-warning-600" />
+            </span>
+            <h3 className="text-[15px] font-medium">Bottled gas</h3>
+            <p className="mt-0.5 text-[12px] text-text-secondary">
+              LPG cylinders for regional homes
+            </p>
+            <p className="mt-3 text-[13px] font-medium text-brand-600">Average save: $600/yr</p>
+            <p className="mt-1 mb-4 flex-1 text-[12px] leading-snug text-text-secondary">
+              The worst loyalty tax in the country — and almost nobody is fighting it.
+            </p>
+            <Link
+              href="/check/bottled-gas/start"
+              className="inline-flex h-9 items-center justify-center gap-1.5 rounded-[8px] bg-brand-500 px-4 text-[13px] font-medium text-white hover:bg-brand-600"
+            >
+              Check my gas
+              <ArrowRight className="size-3.5" />
+            </Link>
+          </div>
+
+          {/* NBN — coming soon */}
+          <div className="flex flex-col rounded-[12px] border-[0.5px] border-black/15 bg-surface p-[18px] md:p-6">
+            <span className="mb-3.5 flex size-11 items-center justify-center rounded-[10px] bg-info-50">
+              <Wifi className="size-[22px] text-info-600" />
+            </span>
+            <h3 className="text-[15px] font-medium">NBN &amp; internet</h3>
+            <p className="mt-0.5 text-[12px] text-text-secondary">
+              Telstra, Optus, Aussie Broadband, the lot
+            </p>
+            <p className="mt-3 text-[13px] font-medium text-text-tertiary">Coming soon</p>
+            <p className="mt-1 mb-4 flex-1 text-[12px] leading-snug text-text-secondary">
+              We&rsquo;re building this next. Want to know when it&rsquo;s live?
+            </p>
+            <NotifyMeButton utility="nbn" />
+          </div>
+
+          {/* Mains gas — coming soon */}
+          <div className="flex flex-col rounded-[12px] border-[0.5px] border-black/15 bg-surface p-[18px] md:p-6">
+            <span className="mb-3.5 flex size-11 items-center justify-center rounded-[10px] bg-brand-50">
+              <ThermometerSun className="size-[22px] text-brand-600" />
+            </span>
+            <h3 className="text-[15px] font-medium">Mains gas</h3>
+            <p className="mt-0.5 text-[12px] text-text-secondary">
+              If your gas comes through pipes
+            </p>
+            <p className="mt-3 text-[13px] font-medium text-text-tertiary">Coming soon</p>
+            <p className="mt-1 mb-4 flex-1 text-[12px] leading-snug text-text-secondary">
+              Mostly metro homes. We&rsquo;re prioritising based on demand.
+            </p>
+            <NotifyMeButton utility="mains_gas" />
+          </div>
+        </div>
+
+        <p className="mt-6 text-center text-[14px] text-text-secondary">
+          Combined household savings often top $1,200/yr — electricity, gas and NBN all chip in.
         </p>
       </section>
 
