@@ -2,7 +2,16 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Check, ChevronDown, Copy, Phone, Shield, Zap } from "lucide-react";
+import {
+  Check,
+  ChevronDown,
+  Copy,
+  ExternalLink,
+  Mail,
+  Phone,
+  Shield,
+  Zap,
+} from "lucide-react";
 
 import { EmailCapture } from "@/components/email-capture";
 import { BillSchema, PARSED_BILL_KEY, TOP_PICK_KEY, type ParsedBill } from "@/lib/bill";
@@ -11,7 +20,7 @@ import {
   PUSHBACK,
   buildMatchScript,
   buildSwitchScript,
-  lookupRetailerPhone,
+  lookupRetailerContact,
 } from "@/lib/script";
 
 type Tab = "match" | "switch";
@@ -105,7 +114,15 @@ export default function ScriptPage() {
   const currentRetailer = bill.retailer_name ?? "your retailer";
   const script = tab === "match" ? buildMatchScript(scriptInput) : buildSwitchScript(scriptInput);
   const callRetailer = tab === "match" ? currentRetailer : topPick.retailer;
-  const phone = lookupRetailerPhone(callRetailer);
+  const contact = lookupRetailerContact(callRetailer);
+  const phone = contact?.phone ?? null;
+  const email = contact?.email ?? null;
+  const contactUrl = contact?.contactUrl ?? null;
+  const emailSubject =
+    tab === "match" ? "Reviewing my electricity rates" : `Signing up to ${topPick.plan}`;
+  const mailto = email
+    ? `mailto:${email}?subject=${encodeURIComponent(emailSubject)}&body=${encodeURIComponent(script)}`
+    : null;
 
   return (
     <Shell>
@@ -157,22 +174,63 @@ export default function ScriptPage() {
         </button>
       </div>
 
-      {/* Phone callout */}
-      <div className="mb-3 flex items-center justify-between rounded-[12px] border-[0.5px] border-black/15 bg-surface px-4 py-3.5">
-        <div className="flex items-center gap-2.5">
-          <Phone className="size-[18px] text-brand-500" />
-          <div>
-            <div className="text-[13px] text-text-secondary">
-              {phone
-                ? `Call ${callRetailer} on`
-                : `Find ${callRetailer}'s number`}
+      {/* How to reach them — phone and/or write */}
+      <div className="mb-3 space-y-2">
+        {phone && (
+          <div className="flex items-center justify-between rounded-[12px] border-[0.5px] border-black/15 bg-surface px-4 py-3.5">
+            <div className="flex items-center gap-2.5">
+              <Phone className="size-[18px] text-brand-500" />
+              <div>
+                <div className="text-[13px] text-text-secondary">Call {callRetailer} on</div>
+                <div className="text-base font-medium">{phone}</div>
+              </div>
             </div>
-            <div className="text-base font-medium">
-              {phone ?? "on your latest bill or their website"}
+            <CopyButton text={phone.replace(/\s/g, "")} />
+          </div>
+        )}
+
+        {email ? (
+          <div className="flex items-center justify-between gap-3 rounded-[12px] border-[0.5px] border-black/15 bg-surface px-4 py-3.5">
+            <div className="flex min-w-0 items-center gap-2.5">
+              <Mail className="size-[18px] shrink-0 text-brand-500" />
+              <div className="min-w-0">
+                <div className="text-[13px] text-text-secondary">
+                  Prefer to write? Email {callRetailer}
+                </div>
+                <div className="truncate text-sm font-medium">{email}</div>
+              </div>
+            </div>
+            <div className="flex shrink-0 items-center gap-1.5">
+              <CopyButton text={email} />
+              <a
+                href={mailto!}
+                className="inline-flex items-center gap-1.5 rounded-[8px] border-[0.5px] border-black/30 px-3 py-1.5 text-xs font-medium text-text-primary hover:bg-surface-muted"
+              >
+                Compose
+              </a>
             </div>
           </div>
-        </div>
-        {phone && <CopyButton text={phone.replace(/\s/g, "")} />}
+        ) : contactUrl ? (
+          <a
+            href={contactUrl}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="flex items-center justify-between rounded-[12px] border-[0.5px] border-black/15 bg-surface px-4 py-3.5 hover:bg-surface-muted"
+          >
+            <div className="flex items-center gap-2.5">
+              <Mail className="size-[18px] text-brand-500" />
+              <div>
+                <div className="text-[13px] text-text-secondary">Prefer to write?</div>
+                <div className="text-sm font-medium">Contact {callRetailer} online</div>
+              </div>
+            </div>
+            <ExternalLink className="size-4 text-info-600" />
+          </a>
+        ) : !phone ? (
+          <div className="rounded-[12px] border-[0.5px] border-black/15 bg-surface px-4 py-3.5 text-[13px] text-text-secondary">
+            Find {callRetailer}&rsquo;s contact details on your latest bill or their website.
+          </div>
+        ) : null}
       </div>
 
       {/* Script */}

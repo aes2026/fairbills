@@ -1,4 +1,4 @@
-import phonesData from "@/data/retailer-phones.json";
+import contactsData from "@/data/retailer-contacts.json";
 
 /**
  * Deterministic switch-script generation. Per the brief, scripts are built from
@@ -27,13 +27,21 @@ function normalise(name: string): string {
   return name.toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
 }
 
-/** Look up a retailer's published contact line, or null to fall back in the UI. */
-export function lookupRetailerPhone(retailer: string | null): string | null {
+export interface RetailerContact {
+  name: string;
+  aliases: string[];
+  phone: string | null;
+  email: string | null;
+  contactUrl: string | null;
+}
+
+/** Look up a retailer's published contact details, or null to fall back in the UI. */
+export function lookupRetailerContact(retailer: string | null): RetailerContact | null {
   if (!retailer) return null;
   const key = normalise(retailer);
-  for (const r of phonesData.retailers) {
+  for (const r of contactsData.retailers as RetailerContact[]) {
     if (r.aliases.some((a) => normalise(a) === key || key.includes(normalise(a)))) {
-      return r.phone;
+      return r;
     }
   }
   return null;
