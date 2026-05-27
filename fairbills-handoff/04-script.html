@@ -1,0 +1,100 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FairBills — Script Screen</title>
+<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@latest/dist/tabler-icons.min.css">
+<style>
+  body { margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #F1EFE8; color: #04342C; line-height: 1.6; padding: 40px 20px; }
+  .container { max-width: 560px; margin: 0 auto; background: white; border-radius: 12px; padding: 28px; }
+  h2 { font-size: 22px; font-weight: 500; margin: 0 0 6px; letter-spacing: -0.3px; }
+  button { font-family: inherit; cursor: pointer; }
+</style>
+</head>
+<body>
+<div class="container">
+
+  <!-- App chrome -->
+  <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
+    <div style="display: flex; align-items: center; gap: 8px;">
+      <div style="width: 28px; height: 28px; background: #1D9E75; border-radius: 8px; display: flex; align-items: center; justify-content: center;">
+        <i class="ti ti-bolt" style="font-size: 16px; color: white;"></i>
+      </div>
+      <span style="font-size: 15px; font-weight: 500;">FairBills</span>
+    </div>
+    <div style="font-size: 12px; color: #888780;">Step 3 of 3</div>
+  </div>
+
+  <h2>Two ways to play this.</h2>
+  <p style="font-size: 13px; color: #5F5E5A; margin: 0 0 20px;">Most people get a better rate either way. Try Option A first — it's a 4-minute phone call.</p>
+
+  <!-- Tabs -->
+  <div style="display: flex; gap: 6px; margin-bottom: 12px;">
+    <div style="flex: 1; background: white; border: 2px solid #1D9E75; padding: 10px 12px; border-radius: 8px; cursor: pointer;">
+      <div style="font-size: 11px; font-weight: 500; color: #0F6E56; margin-bottom: 2px;">OPTION A · RECOMMENDED</div>
+      <div style="font-size: 13px; font-weight: 500;">Ask Origin to match</div>
+    </div>
+    <div style="flex: 1; background: white; border: 0.5px solid rgba(0,0,0,0.15); padding: 10px 12px; border-radius: 8px; cursor: pointer;">
+      <div style="font-size: 11px; font-weight: 500; color: #888780; margin-bottom: 2px;">OPTION B</div>
+      <div style="font-size: 13px; font-weight: 500; color: #5F5E5A;">Switch to Tango</div>
+    </div>
+  </div>
+
+  <!-- Phone callout -->
+  <div style="background: white; border: 0.5px solid rgba(0,0,0,0.15); border-radius: 12px; padding: 14px 16px; margin-bottom: 12px; display: flex; align-items: center; justify-content: space-between;">
+    <div style="display: flex; align-items: center; gap: 10px;">
+      <i class="ti ti-phone" style="font-size: 18px; color: #1D9E75;"></i>
+      <div>
+        <div style="font-size: 13px; color: #5F5E5A;">Call Origin retentions on</div>
+        <div style="font-size: 16px; font-weight: 500; color: #04342C;">13 24 61</div>
+      </div>
+    </div>
+    <button style="background: transparent; color: #185FA5; border: 0.5px solid rgba(0,0,0,0.3); padding: 6px 12px; border-radius: 8px; font-size: 12px; font-weight: 500;">Copy</button>
+  </div>
+
+  <!-- Script -->
+  <div style="background: white; border: 0.5px solid rgba(0,0,0,0.15); border-radius: 12px; padding: 18px 20px; margin-bottom: 12px;">
+    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px;">
+      <div style="font-size: 11px; color: #888780; font-weight: 500; letter-spacing: 0.5px;">YOUR SCRIPT</div>
+      <button style="background: #1D9E75; color: white; border: none; padding: 5px 12px; border-radius: 8px; font-size: 12px; font-weight: 500; display: flex; align-items: center; gap: 5px;">
+        <i class="ti ti-copy" style="font-size: 13px;"></i>
+        Copy
+      </button>
+    </div>
+    <div style="font-size: 14px; line-height: 1.7; color: #04342C;">
+      "Hi, I've been a customer for a few years on the Predictable Plan, account <span style="background: #FAEEDA; padding: 1px 5px; border-radius: 3px; color: #633806;">[your account #]</span>.
+      <br><br>
+      I've just compared my rates and I can move to <span style="background: #E1F5EE; padding: 1px 5px; border-radius: 3px; color: #0F6E56;">Tango Energy's Home Select plan at 22.8c/kWh and 98c daily supply</span> — that's about <span style="background: #E1F5EE; padding: 1px 5px; border-radius: 3px; color: #0F6E56;">$427 a year cheaper</span> than what I'm paying you.
+      <br><br>
+      Before I switch, can you have a look and see what your best offer is? If you can match it or get close, I'd rather stay."
+    </div>
+  </div>
+
+  <!-- If they push back -->
+  <div style="background: white; border: 0.5px solid rgba(0,0,0,0.15); border-radius: 12px; overflow: hidden;">
+    <div style="padding: 12px 16px; display: flex; justify-content: space-between; align-items: center; background: #F1EFE8;">
+      <div style="display: flex; align-items: center; gap: 8px;">
+        <i class="ti ti-shield" style="font-size: 16px; color: #5F5E5A;"></i>
+        <span style="font-size: 13px; font-weight: 500;">If they push back</span>
+      </div>
+      <i class="ti ti-chevron-down" style="font-size: 16px; color: #888780;"></i>
+    </div>
+    <div style="padding: 14px 16px; font-size: 13px; line-height: 1.6; color: #5F5E5A; border-top: 0.5px solid rgba(0,0,0,0.15);">
+      <div style="margin-bottom: 8px;"><span style="color: #04342C; font-weight: 500;">"That's the best I can do"</span> → "Thanks for checking. I'll go ahead and switch then. Can you start my disconnection from <span style="background: #FAEEDA; padding: 1px 5px; border-radius: 3px; color: #633806;">[date]</span>?"</div>
+      <div><span style="color: #04342C; font-weight: 500;">"I need to check with my manager"</span> → "Sure, when can I expect a call back? I'm planning to switch by Friday."</div>
+    </div>
+  </div>
+
+  <!-- Follow up -->
+  <div style="background: #E6F1FB; border-radius: 8px; padding: 14px 16px; margin-top: 16px; display: flex; gap: 10px; align-items: flex-start;">
+    <i class="ti ti-bell" style="font-size: 18px; color: #185FA5; flex-shrink: 0; margin-top: 1px;"></i>
+    <div style="flex: 1;">
+      <div style="font-size: 13px; font-weight: 500; color: #0C447C; margin-bottom: 2px;">Want a nudge in 6 months?</div>
+      <div style="font-size: 12px; color: #185FA5; line-height: 1.5;">Most discounts expire after 12 months. Drop your email and we'll quietly check your bills again — no spam, just savings.</div>
+    </div>
+  </div>
+
+</div>
+</body>
+</html>

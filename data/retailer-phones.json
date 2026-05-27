@@ -1,0 +1,10 @@
+{
+  "__note": "VERIFY before launch. These are general customer-service lines (ask to be put through to retentions/loyalty), sourced from each retailer's site and the AER. Only retailers we've confirmed are listed; everything else falls back to 'find it on your bill'. Numbers change rarely — maintain this file by hand.",
+  "retailers": [
+    { "name": "Origin Energy", "phone": "13 24 61", "aliases": ["origin", "origin energy"] },
+    { "name": "AGL", "phone": "131 245", "aliases": ["agl", "agl energy"] },
+    { "name": "EnergyAustralia", "phone": "133 466", "aliases": ["energyaustralia", "energy australia"] },
+    { "name": "Red Energy", "phone": "131 806", "aliases": ["red energy", "red"] },
+    { "name": "Alinta Energy", "phone": "13 37 02", "aliases": ["alinta", "alinta energy"] }
+  ]
+}
