@@ -14,6 +14,7 @@ import {
   type ParsedBill,
 } from "@/lib/bill";
 import type { ComparisonResult, RankedPlan } from "@/lib/comparison";
+import { setHouseholdFuel } from "@/lib/household";
 
 const STAGES = [
   "Comparing 77 retailers…",
@@ -79,10 +80,24 @@ export default function ResultsPage() {
         });
         const data = await res.json();
         if (res.ok && data.ok) {
-          setResult(data as ComparisonResult);
-          if (data.topPick) {
-            sessionStorage.setItem(TOP_PICK_KEY, JSON.stringify(data.topPick));
+          const cmp = data as ComparisonResult;
+          setResult(cmp);
+          if (cmp.topPick) {
+            sessionStorage.setItem(TOP_PICK_KEY, JSON.stringify(cmp.topPick));
           }
+          const saving =
+            cmp.topPick && cmp.topPick.savingCents > 0 ? cmp.topPick.savingCents : 0;
+          setHouseholdFuel({
+            fuel: "electricity",
+            title: `Electricity · ${parsed.data.retailer_name ?? "your retailer"}`,
+            action:
+              saving > 0 && cmp.topPick
+                ? `Switch to ${cmp.topPick.retailer} ${cmp.topPick.plan}`
+                : "You're already on a sharp deal",
+            annualSavingCents: saving,
+            resultHref: "/results",
+            scriptHref: "/script",
+          });
           setStatus("ready");
         } else {
           setError(data.error ?? "Something went wrong comparing plans.");

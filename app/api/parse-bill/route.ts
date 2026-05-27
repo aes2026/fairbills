@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 
 import { BillSchema } from "@/lib/bill";
+import { LpgBillSchema } from "@/lib/lpg";
 
 export const runtime = "nodejs";
 export const maxDuration = 60;
@@ -40,6 +41,27 @@ For a flat tariff, put the single rate in usage_rate_cents_flat and leave peak/s
 The JSON object must have exactly these keys:
 {"retailer_name","plan_name","account_number","billing_period_start","billing_period_end","total_amount_cents","kwh_used","supply_charge_per_day_cents","usage_rate_cents_flat","usage_rate_cents_peak","usage_rate_cents_shoulder","usage_rate_cents_offpeak","postcode","distributor","tariff_type"}`;
 
+const LPG_INSTRUCTIONS = `You are a precise parser for Australian bottled LPG gas bills and delivery receipts. These vary widely — printed invoices, handwritten dockets, or photos of either. Read the attached file and extract the fields listed below.
+
+Return ONLY a single JSON object — no prose, no explanation, no markdown, no code fences. If a field is not present, use null. Be conservative: prefer null over a guess.
+
+Monetary values must be in CENTS (e.g. $147.00 -> 14700):
+- price_per_bottle_cents: the price of ONE refilled/exchanged bottle. If only a total and a bottle count are shown, divide the total by the count.
+- total_amount_cents, rental_fee_cents, delivery_fee_cents: likewise in cents.
+
+Other fields:
+- supplier_name: e.g. "Origin LPG", "Elgas", "Supagas", or a local supplier's name.
+- account_number: the customer/account reference exactly as printed, or null.
+- customer_name, service_address: as printed, or null.
+- postcode: the 4-digit supply-address postcode as a string, or null.
+- bottle_size_kg: the cylinder size in kg as a number (commonly 45 or 9), or null.
+- number_of_bottles: how many bottles were delivered or refilled, or null.
+- delivery_date: "YYYY-MM-DD", or null.
+- is_exchange: true for a swap-and-go cylinder exchange, false for a refill.
+
+The JSON object must have exactly these keys:
+{"supplier_name","account_number","customer_name","service_address","postcode","bottle_size_kg","number_of_bottles","price_per_bottle_cents","total_amount_cents","rental_fee_cents","delivery_fee_cents","delivery_date","is_exchange"}`;
+
 function json(body: unknown, status = 200) {
   return Response.json(body, { status });
 }
@@ -62,6 +84,9 @@ export async function POST(req: Request) {
   } catch {
     return json({ ok: false, error: "Could not read the upload." }, 400);
   }
+
+  const fuelType = (form.get("fuel_type") as string) || "electricity";
+  const isLpg = fuelType === "bottled_lpg";
 
   const file = form.get("file");
   if (!(file instanceof File)) {
@@ -109,13 +134,24 @@ export async function POST(req: Request) {
       // Static instructions cached for cross-request reuse. Note: Haiku's
       // cache floor is ~4096 tokens, so this short prompt won't actually cache
       // on Haiku — it would on Sonnet/Opus if we move parsing there.
-      system: [{ type: "text", text: INSTRUCTIONS, cache_control: { type: "ephemeral" } }],
+      system: [
+        {
+          type: "text",
+          text: isLpg ? LPG_INSTRUCTIONS : INSTRUCTIONS,
+          cache_control: { type: "ephemeral" },
+        },
+      ],
       messages: [
         {
           role: "user",
           content: [
             fileBlock,
-            { type: "text", text: "Parse this Australian electricity bill." },
+            {
+              type: "text",
+              text: isLpg
+                ? "Parse this Australian bottled LPG gas bill or receipt."
+                : "Parse this Australian electricity bill.",
+            },
           ],
         },
       ],
@@ -143,6 +179,18 @@ export async function POST(req: Request) {
       { ok: false, fallback: "manual", error: "We couldn't read that bill." },
       422,
     );
+  }
+
+  if (isLpg) {
+    const lpgResult = LpgBillSchema.safeParse(candidate);
+    if (!lpgResult.success) {
+      console.error("[parse-bill] LPG schema validation failed:", lpgResult.error.issues);
+      return json(
+        { ok: false, fallback: "manual", error: "Some details didn't look right." },
+        422,
+      );
+    }
+    return json({ ok: true, lpgBill: lpgResult.data });
   }
 
   const result = BillSchema.safeParse(candidate);

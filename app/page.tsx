@@ -159,6 +159,13 @@ export default async function Home() {
             </span>
           ))}
         </div>
+
+        <p className="mt-6 text-[13px] text-text-secondary">
+          Checking your gas instead?{" "}
+          <Link href="/check" className="font-medium text-brand-600 hover:text-brand-700">
+            Check gas →
+          </Link>
+        </p>
       </section>
 
       {/* Live ticker */}
