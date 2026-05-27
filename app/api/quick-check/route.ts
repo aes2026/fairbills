@@ -48,6 +48,7 @@ async function fetchAllFlatPlans(
       .from("plans")
       .select(COLUMNS)
       .eq("state", "NSW")
+      .eq("fuel_type", "ELECTRICITY")
       .eq("is_market_offer", true)
       .eq("tariff_type", "flat")
       .contains("included_postcodes", [postcode])
@@ -71,6 +72,7 @@ export async function GET(req: Request) {
     .from("plans")
     .select("distributor")
     .eq("state", "NSW")
+    .eq("fuel_type", "ELECTRICITY")
     .eq("is_market_offer", true)
     .contains("included_postcodes", [postcode])
     .limit(1000);

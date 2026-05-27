@@ -212,8 +212,8 @@ export default async function Home() {
             <NotifyMeButton utility="nbn" />
           </div>
 
-          {/* Mains gas — coming soon */}
-          <div className="flex flex-col rounded-[12px] border-[0.5px] border-black/15 bg-surface p-[18px] md:p-6">
+          {/* Mains gas — live */}
+          <div className="group flex flex-col rounded-[12px] border-[0.5px] border-black/15 bg-surface p-[18px] transition-all hover:border-brand-500 hover:shadow-md md:p-6">
             <span className="mb-3.5 flex size-11 items-center justify-center rounded-[10px] bg-brand-50">
               <ThermometerSun className="size-[22px] text-brand-600" />
             </span>
@@ -221,11 +221,17 @@ export default async function Home() {
             <p className="mt-0.5 text-[12px] text-text-secondary">
               If your gas comes through pipes
             </p>
-            <p className="mt-3 text-[13px] font-medium text-text-tertiary">Coming soon</p>
+            <p className="mt-3 text-[13px] font-medium text-brand-600">Average save: $150/yr</p>
             <p className="mt-1 mb-4 flex-1 text-[12px] leading-snug text-text-secondary">
-              Mostly metro homes. We&rsquo;re prioritising based on demand.
+              Same retailers as power, the same quiet loyalty tax.
             </p>
-            <NotifyMeButton utility="mains_gas" />
+            <Link
+              href="/check/mains-gas/upload"
+              className="inline-flex h-9 items-center justify-center gap-1.5 rounded-[8px] bg-brand-500 px-4 text-[13px] font-medium text-white hover:bg-brand-600"
+            >
+              Check my gas
+              <ArrowRight className="size-3.5" />
+            </Link>
           </div>
         </div>
 

@@ -55,6 +55,10 @@ interface MappedPlan {
   ev_tariff_rate_cents: number | null;
   has_super_off_peak: boolean;
   super_off_peak_rate_cents: number | null;
+  // gas-only (null for electricity rows)
+  gas_supply_charge_cents_per_day: number | null;
+  gas_rates: { volume: number | null; rate: number }[] | null;
+  gas_distributor: string | null;
   included_postcodes: string[] | null;
   features: Record<string, unknown>;
   effective_from: string;
@@ -86,16 +90,20 @@ interface Args {
   limit?: number;
   retailers?: Set<string>;
   concurrency: number;
+  fuels: ("ELECTRICITY" | "GAS")[];
 }
 
 function parseArgs(argv: string[]): Args {
-  const args: Args = { dryRun: false, concurrency: 6 };
+  const args: Args = { dryRun: false, concurrency: 6, fuels: ["ELECTRICITY", "GAS"] };
   for (let i = 0; i < argv.length; i++) {
     const a = argv[i];
     if (a === "--dry-run") args.dryRun = true;
     else if (a === "--limit") args.limit = Number(argv[++i]);
     else if (a === "--concurrency") args.concurrency = Number(argv[++i]);
-    else if (a === "--retailers")
+    else if (a === "--fuel") {
+      const f = argv[++i]?.toUpperCase();
+      args.fuels = f === "GAS" ? ["GAS"] : f === "ELECTRICITY" ? ["ELECTRICITY"] : ["ELECTRICITY", "GAS"];
+    } else if (a === "--retailers")
       args.retailers = new Set(
         argv[++i].split(",").map((s) => s.trim().toLowerCase()).filter(Boolean),
       );
@@ -150,8 +158,34 @@ interface ElectricityContract {
   discounts?: { displayName?: string; description?: string }[];
   incentives?: { displayName?: string; description?: string; category?: string }[];
 }
+interface GasRate {
+  unitPrice?: string;
+  volume?: number | string;
+}
+interface GasTariffPeriod {
+  dailySupplyCharge?: string;
+  rateBlockUType?: string;
+  singleRate?: { rates?: GasRate[] };
+  blockRate?: { rates?: GasRate[] }[];
+}
+interface GasContract {
+  pricingModel?: string;
+  isFixed?: boolean;
+  tariffPeriod?: GasTariffPeriod[];
+}
 interface PlanDetail {
-  data: PlanSummary & { electricityContract?: ElectricityContract };
+  data: PlanSummary & {
+    electricityContract?: ElectricityContract;
+    gasContract?: GasContract;
+  };
+}
+
+/** NSW gas distribution networks (Jemena = metro; AGN = regional NSW towns). */
+function isNswGasDistributor(name: string): boolean {
+  return /jemena|australian gas networks/i.test((name ?? "").trim());
+}
+function hasNswPostcode(postcodes: string[] | undefined): boolean {
+  return (postcodes ?? []).some((p) => /^2\d{3}$/.test(p));
 }
 
 // ---------------------------------------------------------------------------
@@ -365,6 +399,9 @@ function mapPlan(detail: PlanDetail): MappedPlan[] {
     ev_tariff_rate_cents: featureFlags.ev_tariff_rate_cents,
     has_super_off_peak: featureFlags.has_super_off_peak,
     super_off_peak_rate_cents: featureFlags.super_off_peak_rate_cents,
+    gas_supply_charge_cents_per_day: null,
+    gas_rates: null,
+    gas_distributor: null,
     included_postcodes: d.geography?.includedPostcodes ?? null,
     features,
     effective_from: effectiveFrom,
@@ -374,11 +411,77 @@ function mapPlan(detail: PlanDetail): MappedPlan[] {
   }));
 }
 
+function mapGasPlan(detail: PlanDetail): MappedPlan[] {
+  const d = detail.data;
+  const gc = d.gasContract;
+  const tp = gc?.tariffPeriod?.[0];
+  if (!gc || !tp) return [];
+
+  const supplyCents = toCents(tp.dailySupplyCharge);
+  const rawRates: GasRate[] =
+    tp.singleRate?.rates ?? tp.blockRate?.flatMap((b) => b.rates ?? []) ?? [];
+
+  // Stepped daily rates: each {volume MJ/day (null for the final/remainder
+  // step), rate c/MJ}. Sub-cent precision matters for gas, so rates stay
+  // fractional in the JSONB.
+  const gasRates = rawRates
+    .map((r) => {
+      const vol = r.volume == null ? null : Number(r.volume);
+      const rate = toCents(r.unitPrice);
+      return { volume: vol != null && Number.isFinite(vol) ? vol : null, rate };
+    })
+    .filter((r): r is { volume: number | null; rate: number } => r.rate != null);
+
+  if (gasRates.length === 0) return [];
+
+  const gasDist = (d.geography?.distributors ?? [])[0] ?? null;
+  const supplyInt = supplyCents != null ? Math.round(supplyCents) : null;
+
+  return [
+    {
+      id: d.planId,
+      plan_id: d.planId,
+      retailer_name: d.brandName ?? "",
+      retailer_id: d.brand ?? "",
+      plan_name: d.displayName ?? d.planId,
+      state: "NSW",
+      // The electricity `distributor` column is NOT NULL; reuse the gas network.
+      distributor: gasDist ?? "Gas network",
+      tariff_type: "flat",
+      fuel_type: "GAS",
+      customer_type: d.customerType ?? "RESIDENTIAL",
+      is_market_offer: (d.type ?? "MARKET") === "MARKET",
+      supply_charge_per_day_cents: supplyInt ?? 0,
+      usage_rate_cents_flat: null,
+      usage_rate_cents_peak: null,
+      usage_rate_cents_shoulder: null,
+      usage_rate_cents_offpeak: null,
+      controlled_load_cents: null,
+      solar_fit_cents: null,
+      solar_fit_cents_per_kwh: null,
+      has_ev_tariff: false,
+      ev_tariff_rate_cents: null,
+      has_super_off_peak: false,
+      super_off_peak_rate_cents: null,
+      gas_supply_charge_cents_per_day: supplyInt,
+      gas_rates: gasRates,
+      gas_distributor: gasDist,
+      included_postcodes: d.geography?.includedPostcodes ?? null,
+      features: {},
+      effective_from: (d.effectiveFrom ?? new Date().toISOString()).slice(0, 10),
+      effective_to: null,
+      raw_data: detail,
+      last_synced_at: new Date().toISOString(),
+    },
+  ];
+}
+
 // ---------------------------------------------------------------------------
 // fetch helpers
 // ---------------------------------------------------------------------------
-async function listNswResidentialElectricity(
+async function listNswResidential(
   baseUri: string,
+  fuelType: "ELECTRICITY" | "GAS",
 ): Promise<PlanSummary[]> {
   const out: PlanSummary[] = [];
   let page = 1;
@@ -386,7 +489,7 @@ async function listNswResidentialElectricity(
   do {
     const url =
       `${baseUri}/cds-au/v1/energy/plans` +
-      `?type=MARKET&effective=CURRENT&fuelType=ELECTRICITY&page=${page}&page-size=${PAGE_SIZE}`;
+      `?type=MARKET&effective=CURRENT&fuelType=${fuelType}&page=${page}&page-size=${PAGE_SIZE}`;
     const data = await cdsGet<{
       data?: { plans?: PlanSummary[] };
       meta?: { totalPages?: number };
@@ -396,11 +499,16 @@ async function listNswResidentialElectricity(
     page++;
   } while (page <= totalPages);
 
-  return out.filter(
-    (p) =>
-      p.customerType === "RESIDENTIAL" &&
-      (p.geography?.distributors ?? []).some(isNswDistributor),
-  );
+  return out.filter((p) => {
+    if (p.customerType !== "RESIDENTIAL") return false;
+    const dists = p.geography?.distributors ?? [];
+    if (fuelType === "GAS") {
+      const incl = p.geography?.includedPostcodes ?? [];
+      // Jemena is NSW-only; AGN spans states, so postcode-gate it.
+      return dists.some(isNswGasDistributor) && (incl.length === 0 || hasNswPostcode(incl));
+    }
+    return dists.some(isNswDistributor);
+  });
 }
 
 // ---------------------------------------------------------------------------
@@ -431,46 +539,49 @@ async function main() {
   }
   console.log(`[sync] retailers to scan: ${endpoints.length}`);
 
-  // 2. collect NSW residential electricity plan summaries
-  const summaries: PlanSummary[] = [];
-  for (const ep of endpoints) {
-    const baseUri = ep.productReferenceDataBaseUri.trim();
-    const slug = slugOf(baseUri);
-    try {
-      const plans = await listNswResidentialElectricity(baseUri);
-      for (const p of plans) p.__baseUri = baseUri;
-      summaries.push(...plans);
-      console.log(`[sync]   ${slug}: ${plans.length} NSW residential plans`);
-    } catch (err) {
-      console.warn(`[sync]   ${slug}: list FAILED — ${(err as Error).message}`);
+  // 2-3. per fuel type: collect summaries, fetch details, map to rows
+  const rows: MappedPlan[] = [];
+  for (const fuel of args.fuels) {
+    console.log(`[sync] === ${fuel} ===`);
+    const summaries: PlanSummary[] = [];
+    for (const ep of endpoints) {
+      const baseUri = ep.productReferenceDataBaseUri.trim();
+      const slug = slugOf(baseUri);
+      try {
+        const plans = await listNswResidential(baseUri, fuel);
+        for (const p of plans) p.__baseUri = baseUri;
+        summaries.push(...plans);
+        if (plans.length) console.log(`[sync]   ${slug}: ${plans.length} NSW residential ${fuel}`);
+      } catch (err) {
+        console.warn(`[sync]   ${slug}: list FAILED — ${(err as Error).message}`);
+      }
     }
-  }
-  let toFetch = summaries;
-  if (args.limit && toFetch.length > args.limit) toFetch = toFetch.slice(0, args.limit);
-  console.log(`[sync] plan details to fetch: ${toFetch.length} (of ${summaries.length})`);
+    let toFetch = summaries;
+    if (args.limit && toFetch.length > args.limit) toFetch = toFetch.slice(0, args.limit);
+    console.log(`[sync] ${fuel} details to fetch: ${toFetch.length} (of ${summaries.length})`);
 
-  // 3. fetch details + map
-  let detailFailures = 0;
-  const rowsNested = await pool(toFetch, args.concurrency, async (summary) => {
-    try {
-      const baseUri = (
-        summary.__baseUri ?? `https://cdr.energymadeeasy.gov.au/${summary.brand}`
-      ).trim();
-      const detail = await cdsGet<PlanDetail>(
-        `${baseUri}/cds-au/v1/energy/plans/${summary.planId}`,
-        DETAIL_VERSION,
-      );
-      return mapPlan(detail);
-    } catch (err) {
-      detailFailures++;
-      console.warn(`[sync]   detail FAILED ${summary.planId} — ${(err as Error).message}`);
-      return [] as MappedPlan[];
-    }
-  });
-  const rows = rowsNested.flat();
-  console.log(
-    `[sync] mapped rows: ${rows.length} (detail failures: ${detailFailures})`,
-  );
+    let detailFailures = 0;
+    const map = fuel === "GAS" ? mapGasPlan : mapPlan;
+    const rowsNested = await pool(toFetch, args.concurrency, async (summary) => {
+      try {
+        const baseUri = (
+          summary.__baseUri ?? `https://cdr.energymadeeasy.gov.au/${summary.brand}`
+        ).trim();
+        const detail = await cdsGet<PlanDetail>(
+          `${baseUri}/cds-au/v1/energy/plans/${summary.planId}`,
+          DETAIL_VERSION,
+        );
+        return map(detail);
+      } catch (err) {
+        detailFailures++;
+        console.warn(`[sync]   detail FAILED ${summary.planId} — ${(err as Error).message}`);
+        return [] as MappedPlan[];
+      }
+    });
+    const fuelRows = rowsNested.flat();
+    rows.push(...fuelRows);
+    console.log(`[sync] ${fuel} mapped rows: ${fuelRows.length} (detail failures: ${detailFailures})`);
+  }
 
   // 4. write (or print)
   if (args.dryRun) {
@@ -502,6 +613,20 @@ async function main() {
       return acc;
     }, {});
     console.log("[sync] by tariff_type:", byTariff);
+    const byFuel = rows.reduce<Record<string, number>>((acc, r) => {
+      acc[r.fuel_type] = (acc[r.fuel_type] ?? 0) + 1;
+      return acc;
+    }, {});
+    console.log("[sync] by fuel_type:", byFuel);
+    const gasSample = rows.find((r) => r.fuel_type === "GAS");
+    if (gasSample) {
+      console.log("[sync] gas sample:", JSON.stringify({
+        id: gasSample.id, retailer: gasSample.retailer_name, plan: gasSample.plan_name,
+        gas_distributor: gasSample.gas_distributor,
+        gas_supply_charge_cents_per_day: gasSample.gas_supply_charge_cents_per_day,
+        gas_rates: gasSample.gas_rates,
+      }, null, 1));
+    }
   } else {
     const url = process.env.NEXT_PUBLIC_SUPABASE_URL;
     const key = process.env.SUPABASE_SERVICE_ROLE_KEY;

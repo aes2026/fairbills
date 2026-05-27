@@ -6,7 +6,7 @@
  * results page is revisited.
  */
 
-export type FuelKind = "electricity" | "bottled_lpg";
+export type FuelKind = "electricity" | "bottled_lpg" | "reticulated_gas";
 
 export interface HouseholdFuelSummary {
   fuel: FuelKind;
@@ -36,7 +36,7 @@ export function getSessionId(): string {
   return id;
 }
 
-export function getHousehold(): Record<FuelKind, HouseholdFuelSummary | undefined> {
+export function getHousehold(): Partial<Record<FuelKind, HouseholdFuelSummary>> {
   if (typeof window === "undefined") return {} as Record<FuelKind, HouseholdFuelSummary>;
   try {
     const raw = window.localStorage.getItem(HOUSEHOLD_KEY);

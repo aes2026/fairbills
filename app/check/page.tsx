@@ -63,7 +63,7 @@ export default function CheckPage() {
 
         {/* Mains gas */}
         <Link
-          href="/check/mains-gas/coming-soon"
+          href="/check/mains-gas/upload"
           className="flex items-center gap-3.5 rounded-[12px] border-[0.5px] border-black/15 bg-surface px-[18px] py-4 hover:bg-surface-muted"
         >
           <span className="flex size-[42px] shrink-0 items-center justify-center rounded-[8px] bg-brand-50">

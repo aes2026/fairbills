@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { useEffect, useState } from "react";
-import { Bell, Check, Copy, Flame, Plus, Share2, Zap } from "lucide-react";
+import { Bell, Check, Copy, Flame, Plus, Share2, ThermometerSun, Zap } from "lucide-react";
 
 import { EmailCapture } from "@/components/email-capture";
 import {
@@ -18,11 +18,18 @@ function dollars(cents: number): string {
 const ICON: Record<FuelKind, typeof Zap> = {
   electricity: Zap,
   bottled_lpg: Flame,
+  reticulated_gas: ThermometerSun,
+};
+
+const ICON_WRAP: Record<FuelKind, string> = {
+  electricity: "bg-brand-50 text-brand-600",
+  bottled_lpg: "bg-warning-50 text-warning-600",
+  reticulated_gas: "bg-brand-50 text-[#0F6E56]",
 };
 
 function FuelCard({ s }: { s: HouseholdFuelSummary }) {
   const Icon = ICON[s.fuel];
-  const iconWrap = s.fuel === "electricity" ? "bg-brand-50 text-brand-600" : "bg-warning-50 text-warning-600";
+  const iconWrap = ICON_WRAP[s.fuel];
   return (
     <div className="rounded-[8px] border-[0.5px] border-black/15 bg-surface px-3.5 py-3">
       <div className="mb-2 flex items-center gap-2.5">
@@ -65,7 +72,7 @@ export default function HouseholdPage() {
 
   useEffect(() => {
     const h = getHousehold();
-    const list = (["electricity", "bottled_lpg"] as FuelKind[])
+    const list = (["electricity", "bottled_lpg", "reticulated_gas"] as FuelKind[])
       .map((k) => h[k])
       .filter((x): x is HouseholdFuelSummary => !!x);
     setSummaries(list);

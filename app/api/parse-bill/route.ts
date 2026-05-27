@@ -1,6 +1,7 @@
 import Anthropic from "@anthropic-ai/sdk";
 
 import { BillSchema } from "@/lib/bill";
+import { GasBillSchema } from "@/lib/gas";
 import { LpgBillSchema } from "@/lib/lpg";
 
 export const runtime = "nodejs";
@@ -71,6 +72,30 @@ Other fields:
 The JSON object must have exactly these keys:
 {"supplier_name","account_number","customer_name","service_address","postcode","bottle_size_kg","number_of_bottles","price_per_bottle_cents","total_amount_cents","rental_fee_cents","delivery_fee_cents","delivery_date","is_exchange"}`;
 
+const MAINS_GAS_INSTRUCTIONS = `You are a precise parser for Australian MAINS gas bills (reticulated/piped gas through a meter — NOT bottled LPG). Read the attached bill and extract the fields below.
+
+Return ONLY a single JSON object — no prose, no markdown, no code fences. If a field is not present, use null.
+
+Gas usage is measured in MJ (megajoules), not kWh — do not confuse the two.
+
+All monetary values must be in CENTS:
+- total_amount_cents: total payable on THIS bill (e.g. $210.40 -> 21040).
+- gas_supply_charge_cents_per_day: daily supply/service charge in cents (e.g. 68.5c/day -> 68.5, $0.68/day -> 68). Keep decimals.
+- block1_rate_cents_per_mj / block2_rate_cents_per_mj: usage rates in cents per MJ (e.g. 4.566c/MJ -> 4.566, $0.03133/MJ -> 3.133). Keep decimals.
+
+Other fields:
+- mj_used: total gas used over the billing period, in MJ (a number).
+- block1_threshold_mj: if usage is tiered (e.g. "first 1,000 MJ at rate A, then rate B"), the MJ allowance of the FIRST block for this billing period. If the plan is a single flat rate, leave block1_threshold_mj and block2_rate_cents_per_mj null and put the rate in block1_rate_cents_per_mj.
+- billing_period_start / billing_period_end: ISO "YYYY-MM-DD".
+- postcode: 4-digit supply-address postcode as a string.
+- gas_distributor: the gas network if shown (NSW: "Jemena Gas Networks", "Australian Gas Networks"). Else null.
+- account_number, customer_name, service_address: as printed, or null.
+
+If this is clearly a BOTTLED LPG receipt (cylinders delivered by a driver, "45kg"/"9kg" bottles, swap-and-go), set retailer_name to null and mj_used to null — it is not a mains gas bill.
+
+The JSON object must have exactly these keys:
+{"retailer_name","plan_name","account_number","customer_name","service_address","billing_period_start","billing_period_end","total_amount_cents","mj_used","gas_supply_charge_cents_per_day","block1_rate_cents_per_mj","block1_threshold_mj","block2_rate_cents_per_mj","postcode","gas_distributor"}`;
+
 function json(body: unknown, status = 200) {
   return Response.json(body, { status });
 }
@@ -96,6 +121,7 @@ export async function POST(req: Request) {
 
   const fuelType = (form.get("fuel_type") as string) || "electricity";
   const isLpg = fuelType === "bottled_lpg";
+  const isMainsGas = fuelType === "reticulated_gas";
 
   const file = form.get("file");
   if (!(file instanceof File)) {
@@ -146,7 +172,7 @@ export async function POST(req: Request) {
       system: [
         {
           type: "text",
-          text: isLpg ? LPG_INSTRUCTIONS : INSTRUCTIONS,
+          text: isLpg ? LPG_INSTRUCTIONS : isMainsGas ? MAINS_GAS_INSTRUCTIONS : INSTRUCTIONS,
           cache_control: { type: "ephemeral" },
         },
       ],
@@ -159,7 +185,9 @@ export async function POST(req: Request) {
               type: "text",
               text: isLpg
                 ? "Parse this Australian bottled LPG gas bill or receipt."
-                : "Parse this Australian electricity bill.",
+                : isMainsGas
+                  ? "Parse this Australian mains (piped) gas bill."
+                  : "Parse this Australian electricity bill.",
             },
           ],
         },
@@ -200,6 +228,18 @@ export async function POST(req: Request) {
       );
     }
     return json({ ok: true, lpgBill: lpgResult.data });
+  }
+
+  if (isMainsGas) {
+    const gasResult = GasBillSchema.safeParse(candidate);
+    if (!gasResult.success) {
+      console.error("[parse-bill] gas schema validation failed:", gasResult.error.issues);
+      return json(
+        { ok: false, fallback: "manual", error: "Some details didn't look right." },
+        422,
+      );
+    }
+    return json({ ok: true, gasBill: gasResult.data });
   }
 
   const result = BillSchema.safeParse(candidate);

@@ -28,8 +28,10 @@ export type Database = {
           ev_tariff_rate_cents: number | null;
           expires_at: string;
           fuel_type: string | null;
+          gas_supply_charge_cents_per_day: number | null;
           id: string;
           lpg_data: Json | null;
+          mj_used: number | null;
           parsed_data: Json;
           plan_complexity: string | null;
           recommended_plans: Json | null;
@@ -50,8 +52,10 @@ export type Database = {
           ev_tariff_rate_cents?: number | null;
           expires_at?: string;
           fuel_type?: string | null;
+          gas_supply_charge_cents_per_day?: number | null;
           id?: string;
           lpg_data?: Json | null;
+          mj_used?: number | null;
           parsed_data: Json;
           plan_complexity?: string | null;
           recommended_plans?: Json | null;
@@ -290,6 +294,9 @@ export type Database = {
           ev_tariff_rate_cents: number | null;
           features: Json | null;
           fuel_type: string;
+          gas_distributor: string | null;
+          gas_rates: Json | null;
+          gas_supply_charge_cents_per_day: number | null;
           has_ev_tariff: boolean | null;
           has_super_off_peak: boolean | null;
           id: string;
@@ -321,6 +328,9 @@ export type Database = {
           ev_tariff_rate_cents?: number | null;
           features?: Json | null;
           fuel_type?: string;
+          gas_distributor?: string | null;
+          gas_rates?: Json | null;
+          gas_supply_charge_cents_per_day?: number | null;
           has_ev_tariff?: boolean | null;
           has_super_off_peak?: boolean | null;
           id: string;
