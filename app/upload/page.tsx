@@ -75,8 +75,8 @@ export default function UploadPage() {
   }
 
   return (
-    <main className="min-h-full bg-surface-muted px-5 py-10">
-      <div className="mx-auto w-full max-w-[560px] rounded-[12px] bg-surface p-7">
+    <main className="min-h-dvh bg-surface-muted px-5 py-10">
+      <div className="mx-auto w-full max-w-2xl rounded-[12px] bg-surface p-7">
         {/* App chrome */}
         <div className="mb-8 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">

@@ -57,8 +57,8 @@ export default function ConfirmPage() {
 
   if (state === "missing" || !bill) {
     return (
-      <main className="min-h-full bg-surface-muted px-5 py-10">
-        <div className="mx-auto w-full max-w-[560px] rounded-[12px] bg-surface p-7 text-center">
+      <main className="min-h-dvh bg-surface-muted px-5 py-10">
+        <div className="mx-auto w-full max-w-2xl rounded-[12px] bg-surface p-7 text-center">
           <p className="text-sm text-text-secondary">
             We don&rsquo;t have a bill to check yet.
           </p>
@@ -85,10 +85,10 @@ export default function ConfirmPage() {
   const labelCls = "mb-1 block text-[12px] font-medium text-text-secondary";
 
   return (
-    <main className="min-h-full bg-surface-muted px-5 py-10">
+    <main className="min-h-dvh bg-surface-muted px-5 py-10">
       <form
         onSubmit={onSubmit}
-        className="mx-auto w-full max-w-[560px] rounded-[12px] bg-surface p-7"
+        className="mx-auto w-full max-w-2xl rounded-[12px] bg-surface p-7"
       >
         <div className="mb-6 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">

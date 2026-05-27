@@ -88,7 +88,7 @@ export default async function Home() {
   const hasData = !!stats && stats.reclaimedCents > 0;
 
   return (
-    <main className="mx-auto w-full max-w-[720px] bg-surface text-text-primary">
+    <main className="mx-auto w-full max-w-3xl bg-surface text-text-primary lg:max-w-4xl xl:max-w-5xl">
       {/* Top nav */}
       <header className="flex items-center justify-between px-6 py-5">
         <Link href="/" className="flex items-center gap-2">

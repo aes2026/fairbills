@@ -97,8 +97,8 @@ export default function QuickCheckPage() {
     "w-full rounded-[8px] border-[0.5px] border-black/30 bg-surface px-3.5 py-2.5 text-[15px] text-text-primary outline-none focus:border-brand-500";
 
   return (
-    <main className="min-h-full bg-surface-muted px-5 py-10">
-      <form onSubmit={onSubmit} className="mx-auto w-full max-w-[560px] rounded-[12px] bg-surface p-7">
+    <main className="min-h-dvh bg-surface-muted px-5 py-10">
+      <form onSubmit={onSubmit} className="mx-auto w-full max-w-2xl rounded-[12px] bg-surface p-7">
         <div className="mb-5 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <span className="flex size-7 items-center justify-center rounded-[8px] bg-brand-500">

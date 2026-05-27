@@ -96,8 +96,8 @@ export default function ResultsPage() {
   }, []);
 
   const Shell = ({ children }: { children: React.ReactNode }) => (
-    <main className="min-h-full bg-surface-muted px-5 py-10">
-      <div className="mx-auto w-full max-w-[560px]">
+    <main className="min-h-dvh bg-surface-muted px-5 py-10">
+      <div className="mx-auto w-full max-w-2xl">
         <div className="mb-4 flex items-center justify-between rounded-[12px] bg-surface px-5 py-4">
           <Link href="/" className="flex items-center gap-2">
             <span className="flex size-7 items-center justify-center rounded-[8px] bg-brand-500">

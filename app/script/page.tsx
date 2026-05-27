@@ -68,8 +68,8 @@ export default function ScriptPage() {
   if (state === "loading") return null;
 
   const Shell = ({ children }: { children: React.ReactNode }) => (
-    <main className="min-h-full bg-surface-muted px-5 py-10">
-      <div className="mx-auto w-full max-w-[560px] rounded-[12px] bg-surface p-7">
+    <main className="min-h-dvh bg-surface-muted px-5 py-10">
+      <div className="mx-auto w-full max-w-2xl rounded-[12px] bg-surface p-7">
         <div className="mb-6 flex items-center justify-between">
           <Link href="/" className="flex items-center gap-2">
             <span className="flex size-7 items-center justify-center rounded-[8px] bg-brand-500">
@@ -186,7 +186,15 @@ export default function ScriptPage() {
                 <div className="text-base font-medium">{phone}</div>
               </div>
             </div>
-            <CopyButton text={phone.replace(/\s/g, "")} />
+            <div className="flex shrink-0 items-center gap-1.5">
+              <a
+                href={`tel:${phone.replace(/\s/g, "")}`}
+                className="inline-flex items-center rounded-[8px] bg-brand-500 px-3 py-1.5 text-xs font-medium text-white hover:bg-brand-600"
+              >
+                Call
+              </a>
+              <CopyButton text={phone.replace(/\s/g, "")} />
+            </div>
           </div>
         )}
 

@@ -24,7 +24,7 @@ export default async function UnsubscribePage({
   const msg = MESSAGES[status ?? ""] ?? MESSAGES.invalid;
 
   return (
-    <main className="min-h-full bg-surface-muted px-5 py-16">
+    <main className="min-h-dvh bg-surface-muted px-5 py-16">
       <div className="mx-auto w-full max-w-[480px] rounded-[12px] bg-surface p-7 text-center">
         <h1 className="text-[22px] font-medium tracking-[-0.3px]">{msg.title}</h1>
         <p className="mt-2 text-sm text-text-secondary">{msg.body}</p>
