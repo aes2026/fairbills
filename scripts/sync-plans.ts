@@ -180,9 +180,14 @@ interface PlanDetail {
   };
 }
 
-/** NSW gas distribution networks (Jemena = metro; AGN = regional NSW towns). */
+/** Known NSW gas distribution networks — used only as a fallback when a plan
+ * lists no postcodes. (Jemena = Sydney/Newcastle/Wollongong + Capital/Country;
+ * AGN/Central Ranges/Evoenergy = regional NSW towns like Wagga, Albury,
+ * Tamworth, Queanbeyan.) */
 function isNswGasDistributor(name: string): boolean {
-  return /jemena|australian gas networks/i.test((name ?? "").trim());
+  return /jemena|australian gas networks|central ranges|evoenergy|agn/i.test(
+    (name ?? "").trim(),
+  );
 }
 function hasNswPostcode(postcodes: string[] | undefined): boolean {
   return (postcodes ?? []).some((p) => /^2\d{3}$/.test(p));
@@ -504,8 +509,9 @@ async function listNswResidential(
     const dists = p.geography?.distributors ?? [];
     if (fuelType === "GAS") {
       const incl = p.geography?.includedPostcodes ?? [];
-      // Jemena is NSW-only; AGN spans states, so postcode-gate it.
-      return dists.some(isNswGasDistributor) && (incl.length === 0 || hasNswPostcode(incl));
+      // All NSW gas: any plan that serves a NSW (2xxx) postcode, regardless of
+      // distributor. Plans with no postcodes fall back to a known NSW network.
+      return hasNswPostcode(incl) || (incl.length === 0 && dists.some(isNswGasDistributor));
     }
     return dists.some(isNswDistributor);
   });
