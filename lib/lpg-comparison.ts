@@ -76,6 +76,7 @@ export function computeLpgComparison(
       isPromotional: !!p.is_promotional,
       promoConditions: p.promo_conditions,
       notes: s?.notes ?? null,
+      contactUrl: s?.contact_page_url ?? null,
     });
     if (alternatives.length >= 5) break;
   }

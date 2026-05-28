@@ -16,6 +16,7 @@ import {
 
 import { EmailCapture } from "@/components/email-capture";
 import { PlanFeatureBreakdown } from "@/components/plan-feature-breakdown";
+import { SupplierLink } from "@/components/supplier-link";
 
 import {
   BillSchema,
@@ -26,6 +27,7 @@ import {
 } from "@/lib/bill";
 import type { ComparisonResult, Confidence, RankedPlan } from "@/lib/comparison";
 import { setHouseholdFuel } from "@/lib/household";
+import { lookupRetailerContact } from "@/lib/script";
 
 const STAGES = [
   "Comparing 77 retailers…",
@@ -373,7 +375,11 @@ export default function ResultsPage() {
                 <div>
                   <div className="flex items-center gap-2">
                     <span className="text-[14px] font-medium">
-                      {p.retailer} · {p.plan}
+                      <SupplierLink
+                        name={p.retailer}
+                        url={lookupRetailerContact(p.retailer)?.contactUrl}
+                      />{" "}
+                      · {p.plan}
                     </span>
                     <ConfidenceBadge confidence={p.confidence} />
                   </div>
@@ -466,7 +472,11 @@ export default function ResultsPage() {
           <div className="mt-1.5 mb-2 flex items-baseline justify-between gap-3">
             <div>
               <div className="text-[15px] font-medium">
-                {topPick.retailer} · {topPick.plan}
+                <SupplierLink
+                  name={topPick.retailer}
+                  url={lookupRetailerContact(topPick.retailer)?.contactUrl}
+                />{" "}
+                · {topPick.plan}
               </div>
               <div className="mt-0.5 text-xs text-text-secondary">
                 {topPick.rateLabel} · ${(topPick.supplyCents / 100).toFixed(2)}/day supply
@@ -514,7 +524,11 @@ export default function ResultsPage() {
             >
               <div>
                 <div className="text-sm font-medium">
-                  {p.retailer} · {p.plan}
+                  <SupplierLink
+                    name={p.retailer}
+                    url={lookupRetailerContact(p.retailer)?.contactUrl}
+                  />{" "}
+                  · {p.plan}
                 </div>
                 <div className="mt-0.5 text-[11px] text-text-secondary">
                   {p.savingCents > 0

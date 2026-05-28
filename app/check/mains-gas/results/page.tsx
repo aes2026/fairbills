@@ -4,8 +4,10 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ArrowRight, Flame, Info, ThermometerSun, Zap } from "lucide-react";
 
+import { SupplierLink } from "@/components/supplier-link";
 import { setHouseholdFuel } from "@/lib/household";
 import { GAS_INPUT_KEY, GAS_RESULT_KEY, type GasBill, type GasComparisonResult } from "@/lib/gas";
+import { lookupRetailerContact } from "@/lib/script";
 
 function dollars(cents: number): string {
   return `$${Math.round(cents / 100).toLocaleString("en-AU")}`;
@@ -158,7 +160,11 @@ export default function MainsGasResultsPage() {
           <div className="mt-1.5 mb-2.5 flex items-baseline justify-between gap-3">
             <div>
               <div className="text-[15px] font-medium">
-                {topPick.retailer} · {topPick.plan}
+                <SupplierLink
+                  name={topPick.retailer}
+                  url={lookupRetailerContact(topPick.retailer)?.contactUrl}
+                />{" "}
+                · {topPick.plan}
               </div>
               <div className="mt-0.5 text-xs text-text-secondary">
                 {topPick.effectiveRateCents}c/MJ · ${(topPick.supplyCents / 100).toFixed(2)}/day supply
@@ -190,7 +196,11 @@ export default function MainsGasResultsPage() {
             >
               <div>
                 <div className="text-sm font-medium">
-                  {p.retailer} · {p.plan}
+                  <SupplierLink
+                    name={p.retailer}
+                    url={lookupRetailerContact(p.retailer)?.contactUrl}
+                  />{" "}
+                  · {p.plan}
                 </div>
                 <div className="mt-0.5 text-[11px] text-text-secondary">
                   {p.savingCents > 0 ? `Save ${dollars(p.savingCents)}/yr` : `${dollars(p.annualCents)}/yr`}

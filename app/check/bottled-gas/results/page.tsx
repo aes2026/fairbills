@@ -4,6 +4,7 @@ import Link from "next/link";
 import { useEffect, useState } from "react";
 import { ArrowRight, PhoneCall, Zap } from "lucide-react";
 
+import { SupplierLink } from "@/components/supplier-link";
 import { setHouseholdFuel } from "@/lib/household";
 import { LPG_RESULT_KEY, type LpgResult } from "@/lib/lpg";
 
@@ -206,7 +207,9 @@ export default function BottledGasResultsPage() {
             </div>
             <div className="mt-1 flex items-center justify-between gap-3">
               <div>
-                <div className="text-[13px] font-medium text-brand-700">{best.displayName}</div>
+                <div className="text-[13px] font-medium text-brand-700">
+                  <SupplierLink name={best.displayName} url={best.contactUrl} />
+                </div>
                 {best.notes && (
                   <div className="text-[10px] text-[#3b6d11]">{best.notes}</div>
                 )}
@@ -228,7 +231,9 @@ export default function BottledGasResultsPage() {
               className="flex items-center justify-between border-t border-black/10 py-2.5"
             >
               <div>
-                <div className="text-xs font-medium">{a.displayName}</div>
+                <div className="text-xs font-medium">
+                  <SupplierLink name={a.displayName} url={a.contactUrl} />
+                </div>
                 {a.notes && <div className="text-[10px] text-text-secondary">{a.notes}</div>}
               </div>
               <div className="shrink-0 text-right">

@@ -40,6 +40,7 @@ export interface LpgAlternative {
   isPromotional: boolean;
   promoConditions: string | null;
   notes: string | null;
+  contactUrl: string | null;
 }
 
 export interface LpgSupplierContact {
