@@ -175,7 +175,7 @@ export default async function Home() {
 
         <div className="grid grid-cols-1 gap-3.5 md:grid-cols-3">
           {/* Bottled gas — live */}
-          <div className="group flex flex-col rounded-[12px] border-[0.5px] border-black/15 bg-surface p-[18px] transition-all hover:border-brand-500 hover:shadow-md md:p-6">
+          <div className="group flex flex-col rounded-[12px] border-[0.5px] border-black/25 bg-surface p-[18px] transition-all hover:border-brand-500 hover:shadow-md md:p-6">
             <span className="mb-3.5 flex size-11 items-center justify-center rounded-[10px] bg-warning-50">
               <Flame className="size-[22px] text-warning-600" />
             </span>
@@ -197,7 +197,7 @@ export default async function Home() {
           </div>
 
           {/* NBN — coming soon */}
-          <div className="flex flex-col rounded-[12px] border-[0.5px] border-black/15 bg-surface p-[18px] md:p-6">
+          <div className="flex flex-col rounded-[12px] border-[0.5px] border-black/25 bg-surface p-[18px] md:p-6">
             <span className="mb-3.5 flex size-11 items-center justify-center rounded-[10px] bg-info-50">
               <Wifi className="size-[22px] text-info-600" />
             </span>
@@ -213,7 +213,7 @@ export default async function Home() {
           </div>
 
           {/* Mains gas — live */}
-          <div className="group flex flex-col rounded-[12px] border-[0.5px] border-black/15 bg-surface p-[18px] transition-all hover:border-brand-500 hover:shadow-md md:p-6">
+          <div className="group flex flex-col rounded-[12px] border-[0.5px] border-black/25 bg-surface p-[18px] transition-all hover:border-brand-500 hover:shadow-md md:p-6">
             <span className="mb-3.5 flex size-11 items-center justify-center rounded-[10px] bg-brand-50">
               <ThermometerSun className="size-[22px] text-brand-600" />
             </span>
@@ -302,7 +302,7 @@ export default async function Home() {
           {steps.map(({ icon: Icon, step, title, body }) => (
             <div
               key={step}
-              className="rounded-[12px] border-[0.5px] border-black/15 bg-surface p-5"
+              className="rounded-[12px] border-[0.5px] border-black/25 bg-surface p-5"
             >
               <div className="mb-3.5 flex size-9 items-center justify-center rounded-[8px] bg-brand-50">
                 <Icon className="size-[18px] text-brand-600" />
@@ -326,7 +326,7 @@ export default async function Home() {
           <span className="text-xs text-text-tertiary">Sample · Armidale 2350</span>
         </div>
 
-        <div className="rounded-[12px] border-[0.5px] border-black/15 bg-surface p-5">
+        <div className="rounded-[12px] border-[0.5px] border-black/25 bg-surface p-5">
           {/* Current plan */}
           <div className="mb-3.5 flex items-center justify-between rounded-[8px] bg-danger-50 px-4 py-3.5">
             <div>
