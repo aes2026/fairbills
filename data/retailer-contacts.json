@@ -19,6 +19,15 @@
     { "name": "ENGIE", "aliases": ["engie"], "phone": "13 88 08", "email": null, "contactUrl": "https://engie.com.au/contact-us" },
     { "name": "1st Energy", "aliases": ["1st energy", "first energy"], "phone": "1300 426 594", "email": null, "contactUrl": "https://1stenergy.com.au/contact-us/" },
     { "name": "Diamond Energy", "aliases": ["diamond", "diamond energy"], "phone": "1300 838 009", "email": null, "contactUrl": "https://diamondenergy.com.au/contact-us/" },
-    { "name": "Amber Electric", "aliases": ["amber", "amber electric"], "phone": null, "email": null, "contactUrl": "https://www.amber.com.au/contact" }
+    { "name": "Amber Electric", "aliases": ["amber", "amber electric"], "phone": null, "email": null, "contactUrl": "https://www.amber.com.au/contact" },
+    { "name": "ActewAGL", "aliases": ["actewagl", "actew agl"], "phone": "13 14 93", "email": null, "contactUrl": "https://www.actewagl.com.au/contact" },
+    { "name": "CovaU", "aliases": ["covau"], "phone": "1300 689 866", "email": "support@covau.com.au", "contactUrl": "https://www.covau.com.au/contact/" },
+    { "name": "Dodo", "aliases": ["dodo", "dodo power & gas", "dodo power gas"], "phone": "13 36 36", "email": null, "contactUrl": "https://www.dodo.com/contact-us" },
+    { "name": "Flow Power", "aliases": ["flow power"], "phone": "1300 08 06 08", "email": null, "contactUrl": "https://flowpower.com.au/contact-us/" },
+    { "name": "RAA Energy", "aliases": ["raa", "raa energy"], "phone": "8202 8118", "email": null, "contactUrl": "https://www.raa.com.au/help-centre/home-support/energy" },
+    { "name": "GEE Energy", "aliases": ["gee", "gee energy"], "phone": "1300 707 042", "email": null, "contactUrl": "https://gee.com.au/contact-us/" },
+    { "name": "Solstice Energy", "aliases": ["solstice", "solstice energy"], "phone": "1800 750 750", "email": null, "contactUrl": "https://www.solsticeenergy.com.au/contact-us" },
+    { "name": "Future X Power", "aliases": ["future x", "future x power"], "phone": "1300 599 008", "email": "customerservice@futurexpower.com.au", "contactUrl": "https://www.futurexpower.com.au/contact/" },
+    { "name": "Arcline by RACV", "aliases": ["arcline", "arcline by racv", "racv energy"], "phone": null, "email": null, "contactUrl": "https://arclineenergy.com.au/" }
   ]
 }
