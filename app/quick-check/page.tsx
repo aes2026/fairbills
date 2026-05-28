@@ -129,7 +129,7 @@ export default function QuickCheckPage() {
           />
           {coverage?.covered && (
             <div className="mt-1 flex items-center gap-1 text-[11px] text-brand-600">
-              <Check className="size-3" /> NSW · {coverage.distributor} network
+              <Check className="size-3" /> {coverage.distributor} network
             </div>
           )}
           {coverage && !coverage.covered && (

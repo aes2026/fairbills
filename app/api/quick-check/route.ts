@@ -47,7 +47,6 @@ async function fetchAllFlatPlans(
     const { data, error } = await supabase
       .from("plans")
       .select(COLUMNS)
-      .eq("state", "NSW")
       .eq("fuel_type", "ELECTRICITY")
       .eq("is_market_offer", true)
       .eq("tariff_type", "flat")
@@ -71,7 +70,6 @@ export async function GET(req: Request) {
   const { data, error } = await supabase
     .from("plans")
     .select("distributor")
-    .eq("state", "NSW")
     .eq("fuel_type", "ELECTRICITY")
     .eq("is_market_offer", true)
     .contains("included_postcodes", [postcode])

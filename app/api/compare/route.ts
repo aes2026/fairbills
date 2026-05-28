@@ -75,7 +75,6 @@ export async function POST(req: Request) {
         supabase
           .from("plans")
           .select(PLAN_COLUMNS)
-          .eq("state", "NSW")
           .eq("fuel_type", "ELECTRICITY")
           .eq("is_market_offer", true)
           .eq("tariff_type", candidateTariff)
@@ -90,7 +89,6 @@ export async function POST(req: Request) {
         supabase
           .from("plans")
           .select(PLAN_COLUMNS)
-          .eq("state", "NSW")
           .eq("fuel_type", "ELECTRICITY")
           .eq("is_market_offer", true)
           .eq("tariff_type", candidateTariff)

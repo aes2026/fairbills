@@ -69,14 +69,34 @@ interface MappedPlan {
 
 const ENDPOINTS_URL =
   "https://jxeeno.github.io/energy-cdr-prd-endpoints/energy-prd-endpoints.json";
-// NSW electricity distributors. The AER labels them "Ausgrid", "Endeavour"
-// (NOT "Endeavour Energy"), and several Essential Energy zones ("Essential
-// Energy", "Essential Energy Standard", "Essential Energy Far West"). Match by
-// prefix and store the exact zone label so the comparison engine can pick the
-// right network tariff for the user.
-function isNswDistributor(name: string): boolean {
-  return /^(ausgrid|endeavour|essential energy)/i.test(name.trim());
+
+// Map an Australian postcode to its state/territory. Used to label each plan
+// row; the comparison engine itself matches on postcode, so this is for
+// display/segmentation rather than filtering.
+function stateFromPostcode(pc: string | undefined): string {
+  if (!pc || !/^\d{4}$/.test(pc)) return "AU";
+  if ((pc >= "2600" && pc <= "2618") || (pc >= "2900" && pc <= "2920")) return "ACT";
+  const byFirst: Record<string, string> = {
+    "1": "NSW", "2": "NSW", "3": "VIC", "8": "VIC", "4": "QLD",
+    "9": "QLD", "5": "SA", "6": "WA", "7": "TAS", "0": "NT",
+  };
+  return byFirst[pc[0]] ?? "AU";
 }
+
+// Electricity distributor → state (authoritative for the NEM networks).
+const ELEC_DISTRIBUTOR_STATE: { re: RegExp; state: string }[] = [
+  { re: /ausgrid|endeavour|essential energy/i, state: "NSW" },
+  { re: /energex|ergon/i, state: "QLD" },
+  { re: /sa power networks/i, state: "SA" },
+  { re: /ausnet|citipower|powercor|united energy|jemena/i, state: "VIC" },
+  { re: /tasnetworks|aurora/i, state: "TAS" },
+  { re: /evoenergy|actewagl/i, state: "ACT" },
+];
+function stateForElecDistributor(name: string, postcodes: string[] | undefined): string {
+  for (const x of ELEC_DISTRIBUTOR_STATE) if (x.re.test(name)) return x.state;
+  return stateFromPostcode(postcodes?.[0]);
+}
+
 const LIST_VERSION = 1;
 const DETAIL_VERSION = 3;
 const PAGE_SIZE = 1000;
@@ -180,18 +200,6 @@ interface PlanDetail {
   };
 }
 
-/** Known NSW gas distribution networks — used only as a fallback when a plan
- * lists no postcodes. (Jemena = Sydney/Newcastle/Wollongong + Capital/Country;
- * AGN/Central Ranges/Evoenergy = regional NSW towns like Wagga, Albury,
- * Tamworth, Queanbeyan.) */
-function isNswGasDistributor(name: string): boolean {
-  return /jemena|australian gas networks|central ranges|evoenergy|agn/i.test(
-    (name ?? "").trim(),
-  );
-}
-function hasNswPostcode(postcodes: string[] | undefined): boolean {
-  return (postcodes ?? []).some((p) => /^2\d{3}$/.test(p));
-}
 
 // ---------------------------------------------------------------------------
 // http
@@ -376,17 +384,18 @@ function mapPlan(detail: PlanDetail): MappedPlan[] {
     })),
   };
 
-  const nswDistributors = (d.geography?.distributors ?? []).filter(isNswDistributor);
+  const distributors = d.geography?.distributors ?? [];
   const supply = toCents(tp?.dailySupplyCharge) ?? 0;
   const effectiveFrom = (d.effectiveFrom ?? new Date().toISOString()).slice(0, 10);
+  const postcodes = d.geography?.includedPostcodes;
 
-  return nswDistributors.map((dist) => ({
+  return distributors.map((dist) => ({
     id: `${d.planId}__${dist}`,
     plan_id: d.planId,
     retailer_name: d.brandName ?? "",
     retailer_id: d.brand ?? "",
     plan_name: d.displayName ?? d.planId,
-    state: "NSW",
+    state: stateForElecDistributor(dist, postcodes),
     distributor: dist,
     tariff_type,
     fuel_type: "ELECTRICITY",
@@ -449,7 +458,7 @@ function mapGasPlan(detail: PlanDetail): MappedPlan[] {
       retailer_name: d.brandName ?? "",
       retailer_id: d.brand ?? "",
       plan_name: d.displayName ?? d.planId,
-      state: "NSW",
+      state: stateFromPostcode((d.geography?.includedPostcodes ?? [])[0]),
       // The electricity `distributor` column is NOT NULL; reuse the gas network.
       distributor: gasDist ?? "Gas network",
       tariff_type: "flat",
@@ -484,7 +493,7 @@ function mapGasPlan(detail: PlanDetail): MappedPlan[] {
 // ---------------------------------------------------------------------------
 // fetch helpers
 // ---------------------------------------------------------------------------
-async function listNswResidential(
+async function listResidential(
   baseUri: string,
   fuelType: "ELECTRICITY" | "GAS",
 ): Promise<PlanSummary[]> {
@@ -504,17 +513,10 @@ async function listNswResidential(
     page++;
   } while (page <= totalPages);
 
-  return out.filter((p) => {
-    if (p.customerType !== "RESIDENTIAL") return false;
-    const dists = p.geography?.distributors ?? [];
-    if (fuelType === "GAS") {
-      const incl = p.geography?.includedPostcodes ?? [];
-      // All NSW gas: any plan that serves a NSW (2xxx) postcode, regardless of
-      // distributor. Plans with no postcodes fall back to a known NSW network.
-      return hasNswPostcode(incl) || (incl.length === 0 && dists.some(isNswGasDistributor));
-    }
-    return dists.some(isNswDistributor);
-  });
+  // National coverage: keep every residential plan. The comparison engine
+  // matches candidates by the user's postcode, so no geographic gate is needed
+  // here — and dropping it lets non-NEM/embedded networks through harmlessly.
+  return out.filter((p) => p.customerType === "RESIDENTIAL");
 }
 
 // ---------------------------------------------------------------------------
@@ -554,10 +556,10 @@ async function main() {
       const baseUri = ep.productReferenceDataBaseUri.trim();
       const slug = slugOf(baseUri);
       try {
-        const plans = await listNswResidential(baseUri, fuel);
+        const plans = await listResidential(baseUri, fuel);
         for (const p of plans) p.__baseUri = baseUri;
         summaries.push(...plans);
-        if (plans.length) console.log(`[sync]   ${slug}: ${plans.length} NSW residential ${fuel}`);
+        if (plans.length) console.log(`[sync]   ${slug}: ${plans.length} residential ${fuel}`);
       } catch (err) {
         console.warn(`[sync]   ${slug}: list FAILED — ${(err as Error).message}`);
       }
@@ -647,14 +649,22 @@ async function main() {
     const supabase = createClient(url, key, {
       auth: { persistSession: false },
     });
+    // De-duplicate by id: some national plans list the same distributor twice,
+    // which would otherwise make a single upsert "affect a row a second time".
+    const byId = new Map<string, MappedPlan>();
+    for (const r of rows) byId.set(r.id, r);
+    const uniqueRows = [...byId.values()];
+    if (uniqueRows.length !== rows.length) {
+      console.log(`[sync] deduped ${rows.length} → ${uniqueRows.length} rows by id`);
+    }
     const BATCH = 500;
     let written = 0;
-    for (let i = 0; i < rows.length; i += BATCH) {
-      const batch = rows.slice(i, i + BATCH);
+    for (let i = 0; i < uniqueRows.length; i += BATCH) {
+      const batch = uniqueRows.slice(i, i + BATCH);
       const { error } = await supabase.from("plans").upsert(batch, { onConflict: "id" });
       if (error) throw new Error(`upsert failed at row ${i}: ${error.message}`);
       written += batch.length;
-      console.log(`[sync]   upserted ${written}/${rows.length}`);
+      console.log(`[sync]   upserted ${written}/${uniqueRows.length}`);
     }
     console.log(`[sync] wrote ${written} rows to plans`);
   }
