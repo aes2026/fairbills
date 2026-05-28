@@ -105,9 +105,9 @@ export default async function Home() {
           <a href="#how-it-works" className="text-sm text-text-secondary hover:text-text-primary">
             How it works
           </a>
-          <a href="#why-trust" className="text-sm text-text-secondary hover:text-text-primary">
+          <Link href="/about" className="text-sm text-text-secondary hover:text-text-primary">
             About
-          </a>
+          </Link>
           <a href="#" className="text-sm text-text-secondary hover:text-text-primary">
             FAQ
           </a>
